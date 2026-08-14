@@ -1,100 +1,77 @@
-// Del Norte High School - Campus coordinates (latitude, longitude)
-// Address: 16601 Nighthawk Lane, San Diego, CA 92127
+// Del Norte High School - calibration + local data layer.
+// IMPORTANT: classroom coordinates are intentionally empty until you register them.
+
 const SCHOOL_CENTER = {
   lat: 32.9156,
   lng: -117.1742,
   zoom: 18
 };
 
-// Exact classes from user specification
 const CLASSES = [
-  {
-    name: '3D Computer Animation 1',
-    room: 'A148',
-    teacher: 'Jason Askegreen',
-    startTime: '08:30'
-  },
-  {
-    name: 'Biology of Living Earth 1',
-    room: 'E102',
-    teacher: 'James Gusich',
-    startTime: '09:45'
-  },
-  {
-    name: 'Trigonometry',
-    room: 'R402',
-    teacher: 'Reanna Hightower',
-    startTime: '11:00'
-  },
-  {
-    name: 'ENS',
-    room: 'D104',
-    teacher: 'Brianna Kabaci',
-    startTime: '12:30'
-  },
-  {
-    name: 'HS English',
-    room: 'J116',
-    teacher: 'Robert Weeg',
-    startTime: '14:00'
-  },
-  {
-    name: 'HS English',
-    room: 'D102',
-    teacher: 'Jacob Mcneely',
-    startTime: '15:15'
-  }
+  { name: '3D Computer Animation 1', room: 'A148', teacher: 'Jason Askegreen', startTime: '08:30' },
+  { name: 'Biology of Living Earth 1', room: 'E102', teacher: 'James Gusich', startTime: '09:45' },
+  { name: 'Trigonometry', room: 'R402', teacher: 'Reanna Hightower', startTime: '11:00' },
+  { name: 'ENS', room: 'D104', teacher: 'Brianna Kabaci', startTime: '12:30' },
+  { name: 'HS English', room: 'J116', teacher: 'Robert Weeg', startTime: '14:00' },
+  { name: 'HS English', room: 'D102', teacher: 'Jacob Mcneely', startTime: '15:15' }
 ];
 
-// Classroom locations - TO BE CALIBRATED BY USER
-// This will be filled in as user walks around and marks locations
 let CLASSROOM_LOCATIONS = {};
 
-// Load calibrated locations from localStorage
 function loadCalibratedLocations() {
-  const saved = localStorage.getItem('classroomLocations');
-  if (saved) {
-    CLASSROOM_LOCATIONS = JSON.parse(saved);
+  try {
+    const saved = localStorage.getItem('classroomLocations');
+    CLASSROOM_LOCATIONS = saved ? JSON.parse(saved) : {};
+  } catch {
+    CLASSROOM_LOCATIONS = {};
   }
 }
 
-// Save calibrated locations to localStorage
 function saveCalibratedLocations() {
   localStorage.setItem('classroomLocations', JSON.stringify(CLASSROOM_LOCATIONS));
 }
 
-// Get distance between two GPS coordinates (in meters)
+function deleteCalibratedLocation(room) {
+  delete CLASSROOM_LOCATIONS[room];
+  saveCalibratedLocations();
+}
+
+function clearCalibratedLocations() {
+  CLASSROOM_LOCATIONS = {};
+  saveCalibratedLocations();
+}
+
 function getDistance(lat1, lng1, lat2, lng2) {
-  const R = 6371e3; // Earth's radius in meters
+  const R = 6371000;
   const phi1 = lat1 * Math.PI / 180;
   const phi2 = lat2 * Math.PI / 180;
-  const deltaLat = (lat2 - lat1) * Math.PI / 180;
-  const deltaLng = (lng2 - lng1) * Math.PI / 180;
+  const dPhi = (lat2 - lat1) * Math.PI / 180;
+  const dLambda = (lng2 - lng1) * Math.PI / 180;
 
-  const a = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) +
-            Math.cos(phi1) * Math.cos(phi2) *
-            Math.sin(deltaLng/2) * Math.sin(deltaLng/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const distance = R * c;
+  const a = Math.sin(dPhi / 2) ** 2 +
+    Math.cos(phi1) * Math.cos(phi2) * Math.sin(dLambda / 2) ** 2;
 
-  return Math.round(distance);
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-// Get bearing between two coordinates
 function getBearing(lat1, lng1, lat2, lng2) {
-  const deltaLng = lng2 - lng1;
-  const y = Math.sin(deltaLng) * Math.cos(lat2 * Math.PI / 180);
-  const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
-            Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(deltaLng);
-  
-  let bearing = Math.atan2(y, x) * 180 / Math.PI;
-  return (bearing + 360) % 360; // Normalize to 0-360
+  const phi1 = lat1 * Math.PI / 180;
+  const phi2 = lat2 * Math.PI / 180;
+  const lambda1 = lng1 * Math.PI / 180;
+  const lambda2 = lng2 * Math.PI / 180;
+  const y = Math.sin(lambda2 - lambda1) * Math.cos(phi2);
+  const x = Math.cos(phi1) * Math.sin(phi2) -
+            Math.sin(phi1) * Math.cos(phi2) * Math.cos(lambda2 - lambda1);
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
 }
 
-// Local storage helpers
 function getSchedule() {
-  const saved = localStorage.getItem('userSchedule');
-  return saved ? JSON.parse(saved) : [...CLASSES];
+  try {
+    const saved = localStorage.getItem('userSchedule');
+    return saved ? JSON.parse(saved) : CLASSES.map(c => ({ ...c }));
+  } catch {
+    return CLASSES.map(c => ({ ...c }));
+  }
 }
 
 function saveSchedule(schedule) {
@@ -102,8 +79,11 @@ function saveSchedule(schedule) {
 }
 
 function getMeetingSpots() {
-  const saved = localStorage.getItem('meetingSpots');
-  return saved ? JSON.parse(saved) : [];
+  try {
+    return JSON.parse(localStorage.getItem('meetingSpots') || '[]');
+  } catch {
+    return [];
+  }
 }
 
 function saveMeetingSpots(spots) {
@@ -111,8 +91,11 @@ function saveMeetingSpots(spots) {
 }
 
 function getTasks() {
-  const saved = localStorage.getItem('tasks');
-  return saved ? JSON.parse(saved) : [];
+  try {
+    return JSON.parse(localStorage.getItem('tasks') || '[]');
+  } catch {
+    return [];
+  }
 }
 
 function saveTasks(tasks) {
@@ -120,13 +103,15 @@ function saveTasks(tasks) {
 }
 
 function getHomework() {
-  const saved = localStorage.getItem('homework');
-  return saved ? JSON.parse(saved) : [];
+  try {
+    return JSON.parse(localStorage.getItem('homework') || '[]');
+  } catch {
+    return [];
+  }
 }
 
 function saveHomework(homework) {
   localStorage.setItem('homework', JSON.stringify(homework));
 }
 
-// Initialize on load
 loadCalibratedLocations();
