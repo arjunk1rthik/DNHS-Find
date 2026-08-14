@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Del Norte Campus Navigator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <div class="app-header">
+      <h1>Campus Navigator</h1>
+      <div class="header-status">
+        <span id="gps-status" class="status-badge">GPS: Initializing...</span>
+      </div>
+    </div>
+
+    <div class="permissions-banner" id="permissionsBanner">
+      <p>This app needs location and notification permissions to work properly.</p>
+      <button onclick="requestPermissions()" class="btn btn-primary">Grant permissions</button>
+    </div>
+
+    <div class="map-container">
+      <canvas id="mapCanvas"></canvas>
+      <div class="user-controls">
+        <button class="btn-icon" id="cameraBtn" onclick="takeCameraPhoto()">
+          <i class="icon-camera"></i>
+        </button>
+        <button class="btn-icon" id="centerBtn" onclick="centerMap()">
+          <i class="icon-target"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="panels-container">
+      <div class="panel" id="schedulePanel">
+        <div class="panel-header">
+          <h2>Your Schedule</h2>
+        </div>
+        <div class="panel-content">
+          <div class="schedule-stats">
+            <div class="stat-card">
+              <div class="stat-value" id="nextClassTime">--:--</div>
+              <div class="stat-label">Next class</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="nextClassDistance">--m</div>
+              <div class="stat-label">Distance</div>
+            </div>
+          </div>
+          <div id="scheduleList" class="schedule-list"></div>
+          
+          <div class="panel-section">
+            <h3>Add custom class</h3>
+            <input type="text" id="newClassName" placeholder="Class name" class="input">
+            <input type="text" id="newClassRoom" placeholder="Room (e.g., E102)" class="input">
+            <input type="text" id="newClassTeacher" placeholder="Teacher" class="input">
+            <input type="time" id="newClassTime" class="input">
+            <button class="btn btn-primary" onclick="addCustomClass()">Add class</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="friendsPanel">
+        <div class="panel-header">
+          <h2>Friends & Meeting spots</h2>
+        </div>
+        <div class="panel-content">
+          <div class="panel-section">
+            <h3>Friends online</h3>
+            <div id="friendsList" class="friends-list"></div>
+          </div>
+
+          <div class="panel-section">
+            <h3>Create meeting spot</h3>
+            <input type="text" id="spotName" placeholder="Location name" class="input">
+            <select id="spotType" class="input">
+              <option value="lunch">Lunch</option>
+              <option value="break">Break</option>
+              <option value="office">Office hours</option>
+              <option value="custom">Custom</option>
+            </select>
+            <input type="time" id="spotTime" class="input">
+            <button class="btn btn-primary" onclick="addMeetingSpot()">Create spot</button>
+          </div>
+
+          <div class="panel-section">
+            <h3>Your meeting spots</h3>
+            <div id="meetingSpotsList" class="meeting-spots-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="tasksPanel">
+        <div class="panel-header">
+          <h2>Tasks & homework</h2>
+        </div>
+        <div class="panel-content">
+          <div class="panel-section">
+            <h3>Add task</h3>
+            <input type="text" id="newTaskText" placeholder="Task description" class="input">
+            <select id="newTaskType" class="input">
+              <option value="homework">Homework</option>
+              <option value="study">Study</option>
+              <option value="office">Office prep</option>
+              <option value="other">Other</option>
+            </select>
+            <input type="date" id="newTaskDue" class="input">
+            <button class="btn btn-primary" onclick="addTask()">Add task</button>
+          </div>
+
+          <div class="panel-section">
+            <h3>Collective homework feed</h3>
+            <div id="homeworkFeed" class="homework-feed"></div>
+          </div>
+
+          <div class="panel-section">
+            <h3>Your tasks</h3>
+            <div id="tasksList" class="tasks-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="calibratePanel">
+        <div class="panel-header">
+          <h2>Calibrate classrooms</h2>
+        </div>
+        <div class="panel-content">
+          <div class="calibration-info">
+            <p>Walk to a classroom, then mark its location so the app learns your campus layout.</p>
+            <p><strong>Your current GPS:</strong> <span id="currentCoords">Not available</span></p>
+          </div>
+
+          <button class="btn btn-primary" onclick="markCurrentLocation()" style="width: 100%;">Mark current location</button>
+
+          <div class="panel-section">
+            <h3>Save this location as</h3>
+            <input type="text" id="calibrateRoom" placeholder="Room number (e.g., E102)" class="input">
+            <input type="text" id="calibrateClass" placeholder="Class name (optional)" class="input">
+            <input type="text" id="calibrateTeacher" placeholder="Teacher (optional)" class="input">
+            <button class="btn btn-primary" onclick="saveCalibration()" style="width: 100%;">Save location</button>
+          </div>
+
+          <div class="panel-section">
+            <h3>Calibrated rooms</h3>
+            <div id="calibratedList" class="calibrated-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <button class="nav-btn active" data-panel="schedulePanel" onclick="switchPanel('schedulePanel')">
+        <span class="icon">📅</span>
+        <span>Schedule</span>
+      </button>
+      <button class="nav-btn" data-panel="friendsPanel" onclick="switchPanel('friendsPanel')">
+        <span class="icon">👥</span>
+        <span>Friends</span>
+      </button>
+      <button class="nav-btn" data-panel="tasksPanel" onclick="switchPanel('tasksPanel')">
+        <span class="icon">✓</span>
+        <span>Tasks</span>
+      </button>
+      <button class="nav-btn" data-panel="calibratePanel" onclick="switchPanel('calibratePanel')">
+        <span class="icon">📍</span>
+        <span>Calibrate</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="camera-modal" id="cameraModal">
+    <div class="camera-content">
+      <button class="close-btn" onclick="closeCameraModal()">✕</button>
+      <video id="cameraFeed" autoplay playsinline></video>
+      <button class="btn btn-primary" onclick="capturePhoto()">Take photo</button>
+      <canvas id="photoCanvas" style="display:none;"></canvas>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
