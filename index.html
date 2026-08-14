@@ -2,183 +2,633 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#378add">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
   <title>Del Norte Campus Navigator</title>
+
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
   <div class="app">
-    <div class="app-header">
-      <h1>Campus Navigator</h1>
+
+    <!-- Header -->
+    <header class="app-header">
+      <div>
+        <h1>Campus Navigator</h1>
+        <div class="header-subtitle">Del Norte High School</div>
+      </div>
+
       <div class="header-status">
-        <span id="gps-status" class="status-badge">GPS: Initializing...</span>
+        <span id="gps-status" class="status-badge">
+          GPS: Initializing...
+        </span>
       </div>
+    </header>
+
+    <!-- Permissions -->
+    <div
+      class="permissions-banner"
+      id="permissionsBanner"
+      style="display: none;"
+    >
+      <div>
+        <p>
+          This app needs location access to determine your position
+          and test classroom navigation.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onclick="requestPermissions()"
+        class="btn btn-primary"
+      >
+        Enable GPS
+      </button>
     </div>
 
-    <div class="permissions-banner" id="permissionsBanner">
-      <p>This app needs location and notification permissions to work properly.</p>
-      <button onclick="requestPermissions()" class="btn btn-primary">Grant permissions</button>
-    </div>
-
-    <div class="map-container">
+    <!-- Map -->
+    <main class="map-container">
       <canvas id="mapCanvas"></canvas>
-      <div class="user-controls">
-        <button class="btn-icon" id="cameraBtn" onclick="takeCameraPhoto()">
-          <i class="icon-camera"></i>
-        </button>
-        <button class="btn-icon" id="centerBtn" onclick="centerMap()">
-          <i class="icon-target"></i>
-        </button>
-      </div>
-    </div>
 
+      <div class="map-overlay">
+        <div class="map-info">
+          <div>
+            <strong>Current location</strong>
+          </div>
+
+          <div id="mapLocationText">
+            Waiting for GPS...
+          </div>
+        </div>
+      </div>
+
+      <div class="user-controls">
+
+        <button
+          type="button"
+          class="btn-icon"
+          id="cameraBtn"
+          onclick="takeCameraPhoto()"
+          aria-label="Open camera"
+          title="Camera"
+        >
+          <span class="icon-camera">📷</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn-icon"
+          id="centerBtn"
+          onclick="centerMap()"
+          aria-label="Center map"
+          title="Center on my location"
+        >
+          <span class="icon-target">🎯</span>
+        </button>
+
+      </div>
+    </main>
+
+    <!-- Panels -->
     <div class="panels-container">
-      <div class="panel" id="schedulePanel">
+
+      <!-- Schedule -->
+      <section
+        class="panel"
+        id="schedulePanel"
+        style="display: flex;"
+      >
         <div class="panel-header">
           <h2>Your Schedule</h2>
         </div>
+
         <div class="panel-content">
+
           <div class="schedule-stats">
+
             <div class="stat-card">
-              <div class="stat-value" id="nextClassTime">--:--</div>
-              <div class="stat-label">Next class</div>
+              <div
+                class="stat-value"
+                id="nextClassTime"
+              >
+                --:--
+              </div>
+
+              <div class="stat-label">
+                Next class
+              </div>
             </div>
+
             <div class="stat-card">
-              <div class="stat-value" id="nextClassDistance">--m</div>
-              <div class="stat-label">Distance</div>
+              <div
+                class="stat-value"
+                id="nextClassDistance"
+              >
+                --m
+              </div>
+
+              <div class="stat-label">
+                Distance
+              </div>
             </div>
+
           </div>
-          <div id="scheduleList" class="schedule-list"></div>
-          
+
+          <div
+            id="scheduleList"
+            class="schedule-list"
+          ></div>
+
           <div class="panel-section">
+
             <h3>Add custom class</h3>
-            <input type="text" id="newClassName" placeholder="Class name" class="input">
-            <input type="text" id="newClassRoom" placeholder="Room (e.g., E102)" class="input">
-            <input type="text" id="newClassTeacher" placeholder="Teacher" class="input">
-            <input type="time" id="newClassTime" class="input">
-            <button class="btn btn-primary" onclick="addCustomClass()">Add class</button>
-          </div>
-        </div>
-      </div>
 
-      <div class="panel" id="friendsPanel">
+            <input
+              type="text"
+              id="newClassName"
+              placeholder="Class name"
+              class="input"
+            >
+
+            <input
+              type="text"
+              id="newClassRoom"
+              placeholder="Room (e.g., E102)"
+              class="input"
+            >
+
+            <input
+              type="text"
+              id="newClassTeacher"
+              placeholder="Teacher"
+              class="input"
+            >
+
+            <input
+              type="time"
+              id="newClassTime"
+              class="input"
+            >
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="addCustomClass()"
+            >
+              Add class
+            </button>
+
+          </div>
+
+        </div>
+      </section>
+
+
+      <!-- Friends -->
+      <section
+        class="panel"
+        id="friendsPanel"
+        style="display: none;"
+      >
+
         <div class="panel-header">
-          <h2>Friends & Meeting spots</h2>
+          <h2>Friends & Meeting Spots</h2>
         </div>
+
         <div class="panel-content">
-          <div class="panel-section">
-            <h3>Friends online</h3>
-            <div id="friendsList" class="friends-list"></div>
-          </div>
 
           <div class="panel-section">
+
+            <h3>Friends online</h3>
+
+            <div
+              id="friendsList"
+              class="friends-list"
+            ></div>
+
+          </div>
+
+
+          <div class="panel-section">
+
             <h3>Create meeting spot</h3>
-            <input type="text" id="spotName" placeholder="Location name" class="input">
-            <select id="spotType" class="input">
+
+            <input
+              type="text"
+              id="spotName"
+              placeholder="Location name"
+              class="input"
+            >
+
+            <select
+              id="spotType"
+              class="input"
+            >
               <option value="lunch">Lunch</option>
               <option value="break">Break</option>
               <option value="office">Office hours</option>
               <option value="custom">Custom</option>
             </select>
-            <input type="time" id="spotTime" class="input">
-            <button class="btn btn-primary" onclick="addMeetingSpot()">Create spot</button>
+
+            <input
+              type="time"
+              id="spotTime"
+              class="input"
+            >
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="addMeetingSpot()"
+            >
+              Create spot
+            </button>
+
           </div>
 
+
           <div class="panel-section">
+
             <h3>Your meeting spots</h3>
-            <div id="meetingSpotsList" class="meeting-spots-list"></div>
-          </div>
-        </div>
-      </div>
 
-      <div class="panel" id="tasksPanel">
-        <div class="panel-header">
-          <h2>Tasks & homework</h2>
+            <div
+              id="meetingSpotsList"
+              class="meeting-spots-list"
+            ></div>
+
+          </div>
+
         </div>
+      </section>
+
+
+      <!-- Tasks -->
+      <section
+        class="panel"
+        id="tasksPanel"
+        style="display: none;"
+      >
+
+        <div class="panel-header">
+          <h2>Tasks & Homework</h2>
+        </div>
+
         <div class="panel-content">
+
           <div class="panel-section">
+
             <h3>Add task</h3>
-            <input type="text" id="newTaskText" placeholder="Task description" class="input">
-            <select id="newTaskType" class="input">
+
+            <input
+              type="text"
+              id="newTaskText"
+              placeholder="Task description"
+              class="input"
+            >
+
+            <select
+              id="newTaskType"
+              class="input"
+            >
               <option value="homework">Homework</option>
               <option value="study">Study</option>
               <option value="office">Office prep</option>
               <option value="other">Other</option>
             </select>
-            <input type="date" id="newTaskDue" class="input">
-            <button class="btn btn-primary" onclick="addTask()">Add task</button>
+
+            <input
+              type="date"
+              id="newTaskDue"
+              class="input"
+            >
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="addTask()"
+            >
+              Add task
+            </button>
+
           </div>
 
+
           <div class="panel-section">
+
             <h3>Collective homework feed</h3>
-            <div id="homeworkFeed" class="homework-feed"></div>
+
+            <div
+              id="homeworkFeed"
+              class="homework-feed"
+            ></div>
+
           </div>
 
+
           <div class="panel-section">
+
             <h3>Your tasks</h3>
-            <div id="tasksList" class="tasks-list"></div>
-          </div>
-        </div>
-      </div>
 
-      <div class="panel" id="calibratePanel">
+            <div
+              id="tasksList"
+              class="tasks-list"
+            ></div>
+
+          </div>
+
+        </div>
+      </section>
+
+
+      <!-- Calibration -->
+      <section
+        class="panel"
+        id="calibratePanel"
+        style="display: none;"
+      >
+
         <div class="panel-header">
-          <h2>Calibrate classrooms</h2>
+          <h2>Calibrate Classrooms</h2>
         </div>
+
         <div class="panel-content">
+
           <div class="calibration-info">
-            <p>Walk to a classroom, then mark its location so the app learns your campus layout.</p>
-            <p><strong>Your current GPS:</strong> <span id="currentCoords">Not available</span></p>
+
+            <p>
+              <strong>Testing mode</strong>
+            </p>
+
+            <p>
+              Walk to a classroom and stand near the classroom entrance.
+              Wait for GPS accuracy to stabilize, then mark the current
+              location.
+            </p>
+
+            <p>
+              After marking the location, enter the room information
+              and save it.
+            </p>
+
+            <p>
+              <strong>Your current GPS:</strong>
+              <span id="currentCoords">
+                Not available
+              </span>
+            </p>
+
           </div>
 
-          <button class="btn btn-primary" onclick="markCurrentLocation()" style="width: 100%;">Mark current location</button>
 
+          <!-- Current location -->
           <div class="panel-section">
-            <h3>Save this location as</h3>
-            <input type="text" id="calibrateRoom" placeholder="Room number (e.g., E102)" class="input">
-            <input type="text" id="calibrateClass" placeholder="Class name (optional)" class="input">
-            <input type="text" id="calibrateTeacher" placeholder="Teacher (optional)" class="input">
-            <button class="btn btn-primary" onclick="saveCalibration()" style="width: 100%;">Save location</button>
+
+            <h3>1. Mark current location</h3>
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="markCurrentLocation()"
+              style="width: 100%;"
+            >
+              📍 Mark Current Location
+            </button>
+
+            <div
+              id="pendingLocationStatus"
+              class="pending-location-status"
+            ></div>
+
           </div>
 
+
+          <!-- Room information -->
           <div class="panel-section">
+
+            <h3>2. Label this location</h3>
+
+            <input
+              type="text"
+              id="calibrateRoom"
+              placeholder="Room number (e.g., E102)"
+              class="input"
+              autocomplete="off"
+            >
+
+            <input
+              type="text"
+              id="calibrateClass"
+              placeholder="Class name"
+              class="input"
+              autocomplete="off"
+            >
+
+            <input
+              type="text"
+              id="calibrateTeacher"
+              placeholder="Teacher"
+              class="input"
+              autocomplete="off"
+            >
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="saveCalibration()"
+              style="width: 100%;"
+            >
+              Save Classroom Location
+            </button>
+
+          </div>
+
+
+          <!-- Calibration instructions -->
+          <div class="panel-section">
+
+            <h3>Classrooms to calibrate</h3>
+
+            <div
+              id="calibrationProgress"
+              class="calibration-progress"
+            ></div>
+
+          </div>
+
+
+          <!-- Saved classrooms -->
+          <div class="panel-section">
+
             <h3>Calibrated rooms</h3>
-            <div id="calibratedList" class="calibrated-list"></div>
+
+            <div
+              id="calibratedList"
+              class="calibrated-list"
+            ></div>
+
           </div>
+
+
+          <!-- Test navigation -->
+          <div class="panel-section">
+
+            <h3>Navigation testing</h3>
+
+            <p class="test-description">
+              After calibrating a room, select it below to test
+              distance and direction calculations. Full turn-by-turn
+              navigation will be added after all classroom coordinates
+              have been collected.
+            </p>
+
+            <select
+              id="navigationTestRoom"
+              class="input"
+            >
+              <option value="">
+                Select a calibrated room
+              </option>
+            </select>
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="testNavigation()"
+              style="width: 100%;"
+            >
+              Test Navigation
+            </button>
+
+            <div
+              id="navigationTestResult"
+              class="navigation-test-result"
+            ></div>
+
+          </div>
+
+
+          <!-- Reset -->
+          <div class="panel-section">
+
+            <button
+              type="button"
+              class="btn btn-danger-outline"
+              onclick="clearCalibrationData()"
+              style="width: 100%;"
+            >
+              Clear All Calibration Data
+            </button>
+
+          </div>
+
         </div>
-      </div>
+      </section>
+
     </div>
 
-    <div class="bottom-nav">
-      <button class="nav-btn active" data-panel="schedulePanel" onclick="switchPanel('schedulePanel')">
+
+    <!-- Bottom navigation -->
+    <nav
+      class="bottom-nav"
+      aria-label="Main navigation"
+    >
+
+      <button
+        type="button"
+        class="nav-btn active"
+        data-panel="schedulePanel"
+        onclick="switchPanel('schedulePanel')"
+      >
         <span class="icon">📅</span>
         <span>Schedule</span>
       </button>
-      <button class="nav-btn" data-panel="friendsPanel" onclick="switchPanel('friendsPanel')">
+
+      <button
+        type="button"
+        class="nav-btn"
+        data-panel="friendsPanel"
+        onclick="switchPanel('friendsPanel')"
+      >
         <span class="icon">👥</span>
         <span>Friends</span>
       </button>
-      <button class="nav-btn" data-panel="tasksPanel" onclick="switchPanel('tasksPanel')">
+
+      <button
+        type="button"
+        class="nav-btn"
+        data-panel="tasksPanel"
+        onclick="switchPanel('tasksPanel')"
+      >
         <span class="icon">✓</span>
         <span>Tasks</span>
       </button>
-      <button class="nav-btn" data-panel="calibratePanel" onclick="switchPanel('calibratePanel')">
+
+      <button
+        type="button"
+        class="nav-btn"
+        data-panel="calibratePanel"
+        onclick="switchPanel('calibratePanel')"
+      >
         <span class="icon">📍</span>
         <span>Calibrate</span>
       </button>
-    </div>
+
+    </nav>
+
   </div>
 
-  <div class="camera-modal" id="cameraModal">
+
+  <!-- Camera modal -->
+  <div
+    class="camera-modal"
+    id="cameraModal"
+    aria-hidden="true"
+  >
+
     <div class="camera-content">
-      <button class="close-btn" onclick="closeCameraModal()">✕</button>
-      <video id="cameraFeed" autoplay playsinline></video>
-      <button class="btn btn-primary" onclick="capturePhoto()">Take photo</button>
-      <canvas id="photoCanvas" style="display:none;"></canvas>
+
+      <button
+        type="button"
+        class="close-btn"
+        onclick="closeCameraModal()"
+        aria-label="Close camera"
+      >
+        ✕
+      </button>
+
+      <video
+        id="cameraFeed"
+        autoplay
+        playsinline
+        muted
+      ></video>
+
+      <button
+        type="button"
+        class="btn btn-primary camera-capture-btn"
+        onclick="capturePhoto()"
+      >
+        Take Photo
+      </button>
+
+      <canvas
+        id="photoCanvas"
+        style="display: none;"
+      ></canvas>
+
     </div>
+
   </div>
 
+
+  <!-- Application scripts -->
   <script src="data.js"></script>
   <script src="app.js"></script>
+
 </body>
 </html>
